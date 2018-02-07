@@ -1,2 +1,3 @@
 # chip8-emu
-test commit
+Currently supports:
+- Absolute Nothing!
