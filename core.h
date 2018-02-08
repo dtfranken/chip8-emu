@@ -1,13 +1,15 @@
 #ifndef CHIP8_EMU_CORE_H
 #define CHIP8_EMU_CORE_H
 
+#include <string>
 
 /**
  * An implementation of the CHIP-8 core.
  */
 class Core {
 
-    const unsigned short STACK_ADDRESS = 0xEA0;
+    static constexpr unsigned short PROGRAM_ADDRESS = 0x200;
+    static constexpr unsigned short STACK_ADDRESS = 0xEA0;
 
     /**
      * Memory layout:
@@ -50,9 +52,13 @@ class Core {
      */
     unsigned char key[16]; // TODO: Use bits instead of bytes
 
-    unsigned short instruction;
+    // Holds the instruction that is executed
+    unsigned short instruction; // TODO: Refactor maybe?
 
+public:
+    void initialize();
+    void loadProgram(std::string program_name);
+    void emulateCycle();
 };
-
 
 #endif //CHIP8_EMU_CORE_H

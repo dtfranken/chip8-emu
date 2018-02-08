@@ -3,4 +3,4 @@ project(chip8_emu)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(chip8_emu main.cpp core.h)
+add_executable(chip8_emu main.cpp core.h core.cpp)

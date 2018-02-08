@@ -1,13 +1,20 @@
 #include "core.h"
 
+Core core;
+
 int main()
 {
-    Core core;
-
     // Initialize registers
-    // Load program
+    core.initialize();
+    core.loadProgram("test.ch8");
 
     // Emulation loop
+    while (true)
+    {
+        core.emulateCycle();
+
+        // Update screen
+    }
 
     return 0;
 }
