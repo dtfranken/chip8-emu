@@ -1,6 +1,12 @@
 #include <iostream>
 #include "core.h"
 
+
+Core::Core(Keyboard keyboard) : keyboard(keyboard)
+{
+
+}
+
 /**
  * Initializes the core by setting up all registers and memory.
  */
@@ -76,6 +82,7 @@ void Core::emulateCycle()
                     break;
                 default:
                     // TODO: Call RCA 1802 program: rca(in_address)
+                    std::printf("Call to RCA 1802 program at %X.\n", in_address);
                     break;
             }
             PC += 2;
@@ -189,10 +196,10 @@ void Core::emulateCycle()
             switch (ram[PC+1])
             {
                 case 0x9E: // Skip the next instruction if the key stored in Vx is pressed
-                    PC += key[V[in_reg_x]] ? 4 : 2;
+                    PC += keyboard.getKey(V[in_reg_x]) ? 4 : 2;
                     break;
                 case 0xA1: // Skip the next instruction if the key stored in Vx is not pressed
-                    PC += key[V[in_reg_x]] ? 2 : 4;
+                    PC += keyboard.getKey(V[in_reg_x]) ? 2 : 4;
                     break;
                 default:
                     PC += 2;

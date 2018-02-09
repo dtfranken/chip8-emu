@@ -1,8 +1,10 @@
 #include "core.h"
+#include "keyboard.h"
 
 int main()
 {
-    Core core{};
+    Keyboard keyboard{};
+    Core core{keyboard};
 
     // Initialize registers
     core.initialize();
@@ -14,6 +16,8 @@ int main()
         core.emulateCycle();
 
         // Update screen
+
+        // Update keys
     }
 
     return 0;

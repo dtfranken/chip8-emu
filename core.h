@@ -1,13 +1,14 @@
 #ifndef CHIP8_EMU_CORE_H
 #define CHIP8_EMU_CORE_H
 
+#include "keyboard.h"
 #include <string>
 
 /**
  * An implementation of the CHIP-8 core.
  */
-class Core {
-
+class Core
+{
     static constexpr unsigned short PROGRAM_ADDRESS = 0x200;
     static constexpr unsigned short STACK_ADDRESS = 0xEA0;
 
@@ -51,7 +52,7 @@ class Core {
      * - 16 keys
      * - Set to 1 when pressed, 0 otherwise
      */
-    unsigned char key[16]; // TODO: Use bits instead of bytes
+    Keyboard keyboard;
 
     /**
      * Hold instruction data during execution:
@@ -61,8 +62,8 @@ class Core {
     unsigned char in_reg_x;
     unsigned char in_reg_y;
 
-
 public:
+    Core(Keyboard keyboard);
     void initialize();
     void loadProgram(std::string program_name);
     void emulateCycle();
