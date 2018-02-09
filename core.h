@@ -52,8 +52,16 @@ class Core {
      */
     unsigned char key[16]; // TODO: Use bits instead of bytes
 
-    // Holds the instruction that is executed
-    unsigned short instruction; // TODO: Refactor maybe?
+    /**
+     * Hold instruction data during execution:
+     */
+//    unsigned short instruction;
+    unsigned short in_address;
+//    unsigned char in_constant_nn;
+    unsigned char in_constant_n;
+    unsigned char in_reg_x;
+    unsigned char in_reg_y;
+
 
 public:
     void initialize();

@@ -6,7 +6,7 @@ int main()
 {
     // Initialize registers
     core.initialize();
-    core.loadProgram("test.ch8");
+    core.loadProgram("../programs/IBM Logo.ch8");
 
     // Emulation loop
     while (true)
