@@ -49,15 +49,14 @@ class Core {
     /**
      * Input:
      * - 16 keys
+     * - Set to 1 when pressed, 0 otherwise
      */
     unsigned char key[16]; // TODO: Use bits instead of bytes
 
     /**
      * Hold instruction data during execution:
      */
-//    unsigned short instruction;
     unsigned short in_address;
-//    unsigned char in_constant_nn;
     unsigned char in_constant_n;
     unsigned char in_reg_x;
     unsigned char in_reg_y;

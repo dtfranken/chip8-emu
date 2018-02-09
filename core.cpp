@@ -68,7 +68,7 @@ void Core::emulateCycle()
                     // TODO: Clear display
                     break;
                 case 0x0EE: // Return from subroutine
-                    --SP;
+                    SP -= 2;
                     {
                         short offset = STACK_ADDRESS + SP;
                         PC = ram[offset] << 8 | ram[offset + 1];
@@ -86,7 +86,7 @@ void Core::emulateCycle()
                 ram[offset] = static_cast<unsigned char>(PC >> 8);
                 ram[offset + 1] = static_cast<unsigned char>(PC & 0x00FF);
             }
-            ++SP;
+            SP += 2;
         case 0x1: // Jump to address NNN
             PC = in_address;
             break;
@@ -188,11 +188,11 @@ void Core::emulateCycle()
         case 0xE:
             switch (ram[PC+1])
             {
-                case 0x9E:
-                    // TODO: Handle key pressed
+                case 0x9E: // Skip the next instruction if the key stored in Vx is pressed
+                    PC += key[V[in_reg_x]] ? 4 : 2;
                     break;
-                case 0xA1:
-                    // TODO: Handle key not pressed
+                case 0xA1: // Skip the next instruction if the key stored in Vx is not pressed
+                    PC += key[V[in_reg_x]] ? 2 : 4;
                     break;
                 default:
                     PC += 2;
@@ -200,8 +200,59 @@ void Core::emulateCycle()
             }
             break;
         case 0xF:
-            // TODO: Implement
+            switch (ram[PC+1])
+            {
+                case 0x07:
+                    // TODO: Set Vx to delay timer
+                    break;
+                case 0x0A:
+                    // TODO: if get pressed key < 0 return
+                    // else store key in Vx
+                    break;
+                case 0x15:
+                    // TODO: Set delay timer to Vx
+                    break;
+                case 0x18:
+                    // TODO: Set sound timer to Vx
+                    break;
+                case 0x1E: // Add Vx to I (set carry flag VF to 1 on carry, 0 otherwise)
+                    I += V[in_reg_x];
+                    if (I > 0xFFF)
+                    {
+                        I &= 0xFFF;
+                        V[0xF] = 1;
+                    }
+                    else
+                    {
+                        V[0xF] = 0;
+                    }
+                    break;
+                case 0x29:
+                    // TODO: Set I to mem location of character in TODO: font set
+                    break;
+                case 0x33: // Store the BCD representation of Vx at address I, I+1, I+2
+                    ram[I] = static_cast<unsigned char>(V[in_reg_x] / 100);
+                    ram[I+1] = static_cast<unsigned char>(V[in_reg_x] / 10 % 10);
+                    ram[I+2] = static_cast<unsigned char>(V[in_reg_x] % 10);
+                    break;
+                case 0x55: // Store V0 to Vx at address I to I+x
+                    for (int reg = 0; reg <= in_reg_x; ++reg)
+                    {
+                        ram[I] = V[reg];
+                        ++I;
+                    }
+                    break;
+                case 0x65: // Load values stored at address I to I+x into V0 to Vx
+                    for (int reg = 0; reg <= in_reg_x; ++reg)
+                    {
+                        V[reg] = ram[I];
+                        ++I;
+                    }
+                default: // Invalid opcode
+                    break;
+            }
         default:
+            PC += 2;
             break;
     }
 }
