@@ -12,6 +12,7 @@ class Keyboard
 public:
     void setKey(char key, bool pressed);
     bool getKey(char key);
+    char getPressedKey();
 };
 
 

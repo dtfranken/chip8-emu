@@ -2,10 +2,9 @@
 #include "core.h"
 
 
-Core::Core(Keyboard keyboard) : keyboard(keyboard)
-{
+Core::Core(Keyboard keyboard) : keyboard(keyboard) {}
 
-}
+unsigned char* Core::getPixels() { return display; }
 
 /**
  * Initializes the core by setting up all registers and memory.
@@ -14,6 +13,11 @@ void Core::initialize()
 {
     srand(static_cast<unsigned int>(time(nullptr)));
 
+    delay_timer = 0;
+    sound_timer = 0;
+
+    draw_display = false;
+
     PC = PROGRAM_ADDRESS;
     SP = 0;
     I = 0;
@@ -21,11 +25,19 @@ void Core::initialize()
     {
         V[i] = 0;
         ram[i] = 0;
+        display[i] = 0;
     }
-    for (short i = 16; i < 4096; ++i)
+    for (short i = 16; i < HEIGHT * WIDTH; ++i)
+    {
+        display[i] = 0;
+        ram[i] = 0;
+    }
+    for (short i = HEIGHT * WIDTH; i < 4096; ++i)
     {
         ram[i] = 0;
     }
+
+    // TODO: Create and load font set into memory
 }
 
 /**
@@ -70,8 +82,12 @@ void Core::emulateCycle()
         case 0x0:
             switch (in_address)
             {
-                case 0x0E0:
-                    // TODO: Clear display
+                case 0x0E0: // Clear display
+                    for (short i = 0; i < WIDTH * HEIGHT; ++i)
+                    {
+                        display[i] = 0;
+                    }
+                    draw_display = true;
                     break;
                 case 0x0EE: // Return from subroutine
                     SP -= 2;
@@ -82,7 +98,7 @@ void Core::emulateCycle()
                     break;
                 default:
                     // TODO: Call RCA 1802 program: rca(in_address)
-                    std::printf("Call to RCA 1802 program at %X.\n", in_address);
+                    std::printf("Call to RCA 1802 program at 0x%X.\n", in_address);
                     break;
             }
             PC += 2;
@@ -166,7 +182,7 @@ void Core::emulateCycle()
                     break;
                 case 0xE: // Set VF to Vy >> 7, set Vx = Vy = Vy << 1
                     {
-                        auto msb = static_cast<unsigned char>(V[in_reg_y] >> 7);
+                        unsigned char msb = V[in_reg_y] >> 7;
                         V[in_reg_x] = V[in_reg_y] <<= 1;
                         V[0xF] = msb;
                     }
@@ -189,8 +205,25 @@ void Core::emulateCycle()
             V[in_reg_x] = static_cast<unsigned char>(rand() % 256 & ram[PC + 1]);
             PC += 2;
             break;
-        case 0xD:
-            // TODO: Draw sprite at Vx, Vy
+        case 0xD: // Draw a sprite at Vx, Vy, 8 pixels wide and N pixels high, which is stored at I
+            {
+                unsigned char pixel_row;
+                short pixel_index;
+                bool pixel_data;
+                for (unsigned char row = 0; row < in_constant_n; ++row)
+                {
+                    pixel_row = ram[I+row];
+                    for (unsigned char col = 0; col < 8; ++col)
+                    {
+                        pixel_data = static_cast<unsigned char>(pixel_row >> (7 - col) & 1);
+                        pixel_index = V[in_reg_x] + col + (V[in_reg_y] + row) * WIDTH;
+                        display[pixel_index] ^= pixel_data;
+                        V[0xF] = static_cast<unsigned char>(pixel_data & display[pixel_index] ? 0 : 1); // Set collision flag VF to 1 if a pixel is unset, 0 otherwise
+                    }
+                }
+            }
+            draw_display = true;
+            PC += 2;
             break;
         case 0xE:
             switch (ram[PC+1])
@@ -209,18 +242,24 @@ void Core::emulateCycle()
         case 0xF:
             switch (ram[PC+1])
             {
-                case 0x07:
-                    // TODO: Set Vx to delay timer
+                case 0x07: // Set Vx to the value of the delay timer
+                    V[in_reg_x] = delay_timer;
                     break;
-                case 0x0A:
-                    // TODO: if get pressed key < 0 return
-                    // else store key in Vx
+                case 0x0A: // Halt program execution until a key is pressed, and store the key in Vx
+                    {
+                        char key = keyboard.getPressedKey();
+                        if (keyboard.getPressedKey() < 0)
+                        {
+                            return;
+                        }
+                        V[in_reg_x] = static_cast<unsigned char>(key);
+                    }
                     break;
-                case 0x15:
-                    // TODO: Set delay timer to Vx
+                case 0x15: // Set delay timer to Vx
+                    delay_timer = V[in_reg_x];
                     break;
-                case 0x18:
-                    // TODO: Set sound timer to Vx
+                case 0x18: // Set sound timer to Vx
+                    sound_timer = V[in_reg_x];
                     break;
                 case 0x1E: // Add Vx to I (set carry flag VF to 1 on carry, 0 otherwise)
                     I += V[in_reg_x];
@@ -234,8 +273,8 @@ void Core::emulateCycle()
                         V[0xF] = 0;
                     }
                     break;
-                case 0x29:
-                    // TODO: Set I to mem location of character in TODO: font set
+                case 0x29: // Set I to the address of the font for the character in Vx
+                    //I = FONT_ADDRESS + V[in_reg_x];
                     break;
                 case 0x33: // Store the BCD representation of Vx at address I, I+1, I+2
                     ram[I] = static_cast<unsigned char>(V[in_reg_x] / 100);

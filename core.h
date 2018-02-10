@@ -12,6 +12,9 @@ class Core
     static constexpr unsigned short PROGRAM_ADDRESS = 0x200;
     static constexpr unsigned short STACK_ADDRESS = 0xEA0;
 
+    static constexpr unsigned char WIDTH = 64;
+    static constexpr unsigned char HEIGHT = 32;
+
     /**
      * Memory layout:
      *  0x000-0x1FF = Reserved
@@ -37,7 +40,7 @@ class Core
      * Display:
      * - Resolution = 64 x 32
      */
-    unsigned char display[2048]; // TODO: Use bits instead of bytes
+    unsigned char display[WIDTH * HEIGHT];
 
     /**
      * Timers:
@@ -67,6 +70,9 @@ public:
     void initialize();
     void loadProgram(std::string program_name);
     void emulateCycle();
+    unsigned char* getPixels();
+
+    bool draw_display;
 };
 
 #endif //CHIP8_EMU_CORE_H
