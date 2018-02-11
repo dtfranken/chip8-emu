@@ -145,6 +145,7 @@ int main(int argc, char *argv[])
             keyboard.setKey(key, e.key.state);
         }
 
+        // TODO: Time using system clock
         SDL_Delay(1);
     }
 

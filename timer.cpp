@@ -11,9 +11,9 @@ unsigned char Timer::getValue() const
 /**
  * Sets the value of this timer to the specified value.
  */
-void Timer::setValue(unsigned char new_value)
+void Timer::setValue(unsigned char value)
 {
-    value = new_value;
+    this->value = value;
 }
 
 /**
