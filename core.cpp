@@ -219,6 +219,7 @@ void Core::emulateCycle()
             break;
         case 0xD: // Draw a sprite at Vx, Vy, 8 pixels wide and N pixels high, which is stored at I
             {
+                V[0xF] = 0;
                 unsigned char pixel_row;
                 short pixel_index;
                 unsigned char pixel_data;
@@ -230,9 +231,13 @@ void Core::emulateCycle()
                         pixel_data = static_cast<unsigned char>((pixel_row >> (7 - col) & 1) ? -1 : 0);
                         pixel_index = V[in_reg_x] + col + (V[in_reg_y] + row) * WIDTH;
                         display[pixel_index] ^= pixel_data;
-                        V[0xF] = static_cast<unsigned char>(pixel_data & display[pixel_index] ? 0 : 1); // Set collision flag VF to 1 if a pixel is unset, 0 otherwise
+                        if (!V[0xF])
+                        {
+                            V[0xF] |= static_cast<unsigned char>(pixel_data & ~display[pixel_index] ? 1 : 0); // Set collision flag VF to 1 if a pixel is unset
+                        }
                     }
                 }
+                //std::cout << "Collision Flag VF = " << (V[0xF] ? '1' : '0') << std::endl;
             }
             draw_display = true;
             PC += 2;

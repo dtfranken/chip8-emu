@@ -146,7 +146,7 @@ int main(int argc, char *argv[])
         }
 
         // TODO: Time using system clock
-        SDL_Delay(1);
+        SDL_Delay(10);
     }
 
     // Clean up
