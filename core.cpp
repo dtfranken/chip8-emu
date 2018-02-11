@@ -27,10 +27,13 @@ void Core::initialize()
     for (char i = 0; i < 16; ++i)
     {
         V[i] = 0;
-        ram[i] = 0;
         display[i] = 0;
     }
-    for (short i = 16; i < RESOLUTION; ++i)
+    for (char i = 16; i < FONT_ADDRESS + 80; ++i) // 5 bytes per character, 16 characters = 80 bytes
+    {
+        display[i] = 0;
+    }
+    for (short i = FONT_ADDRESS + 5 * 0xF; i < RESOLUTION; ++i)
     {
         display[i] = 0;
         ram[i] = 0;
@@ -40,7 +43,11 @@ void Core::initialize()
         ram[i] = 0;
     }
 
-    // TODO: Create and load font set into memory
+    // Load font data into memory
+    for (char i = 0; i < 80; ++i)
+    {
+        ram[i] = font_data[i];
+    }
 }
 
 /**
@@ -207,7 +214,7 @@ void Core::emulateCycle()
             PC = in_address + V[0];
             break;
         case 0xC: // Set Vx = NN & random number
-            V[in_reg_x] = static_cast<unsigned char>(rand() % 256 & ram[PC + 1]);
+            V[in_reg_x] = static_cast<unsigned char>(rand() & ram[PC + 1]);
             PC += 2;
             break;
         case 0xD: // Draw a sprite at Vx, Vy, 8 pixels wide and N pixels high, which is stored at I
@@ -279,10 +286,10 @@ void Core::emulateCycle()
                     }
                     break;
                 case 0x29: // Set I to the address of the font for the character in Vx
-                    //I = FONT_ADDRESS + V[in_reg_x];
+                    I = static_cast<unsigned short>(FONT_ADDRESS + 5 * V[in_reg_x]);
                     break;
                 case 0x33: // Store the BCD representation of Vx at address I, I+1, I+2
-                    ram[I] = static_cast<unsigned char>(V[in_reg_x] / 100);
+                    ram[I] = static_cast<unsigned char>((V[in_reg_x] >> 2) / 25);
                     ram[I+1] = static_cast<unsigned char>(V[in_reg_x] / 10 % 10);
                     ram[I+2] = static_cast<unsigned char>(V[in_reg_x] % 10);
                     break;
