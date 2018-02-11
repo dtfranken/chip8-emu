@@ -1,7 +1,6 @@
 #ifndef CHIP8_EMU_KEYBOARD_H
 #define CHIP8_EMU_KEYBOARD_H
 
-
 class Keyboard
 {
     /**
@@ -11,9 +10,8 @@ class Keyboard
 
 public:
     void setKey(char key, bool pressed);
-    bool getKey(char key);
-    char getPressedKey();
+    bool getKey(char key) const;
+    char getPressedKey() const;
 };
-
 
 #endif //CHIP8_EMU_KEYBOARD_H

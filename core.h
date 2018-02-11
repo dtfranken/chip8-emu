@@ -2,6 +2,7 @@
 #define CHIP8_EMU_CORE_H
 
 #include "keyboard.h"
+#include "timer.h"
 #include <string>
 
 /**
@@ -14,6 +15,7 @@ public:
     static constexpr char HEIGHT = 32;
     static constexpr short RESOLUTION = WIDTH * HEIGHT;
 private:
+    static constexpr unsigned short FONT_ADDRESS = 0x000;
     static constexpr unsigned short PROGRAM_ADDRESS = 0x200;
     static constexpr unsigned short STACK_ADDRESS = 0xEA0;
 
@@ -39,25 +41,25 @@ private:
     unsigned short PC;
 
     /**
-     * Display:
+     * Monochrome Display:
      * - Resolution = 64 x 32
      */
     unsigned char display[RESOLUTION];
 
     /**
-     * Timers:
-     * - Delay @ 60 Hz
-     * - Sound @ 60 Hz
+     * 2 Timers:
+     * - Delay timer
+     * - Sound timer
      */
-    unsigned char delay_timer;
-    unsigned char sound_timer;
+    Timer& delay_timer;
+    Timer& sound_timer;
 
     /**
      * Input:
      * - 16 keys
      * - Set to 1 when pressed, 0 otherwise
      */
-    Keyboard keyboard;
+    Keyboard& keyboard;
 
     /**
      * Hold instruction data during execution:
@@ -68,12 +70,15 @@ private:
     unsigned char in_reg_y;
 
 public:
-    Core(Keyboard keyboard);
+    Core(Keyboard& keyboard, Timer& delay_timer, Timer& sound_timer);
     void initialize();
-    void loadProgram(std::string program_name);
+    void loadProgram(const std::string& program_name);
     void emulateCycle();
     unsigned char* getPixels();
 
+    /**
+     * Flag that indicates whether the screen needs to be redrawn.
+     */
     bool draw_display;
 };
 

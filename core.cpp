@@ -1,10 +1,13 @@
 #include <iostream>
 #include "core.h"
 
+Core::Core(Keyboard& keyboard, Timer& delay_timer, Timer& sound_timer) : keyboard(keyboard),
+        delay_timer(delay_timer), sound_timer(sound_timer) {}
 
-Core::Core(Keyboard keyboard) : keyboard(keyboard) {}
-
-unsigned char* Core::getPixels() { return display; }
+unsigned char* Core::getPixels()
+{
+    return display;
+}
 
 /**
  * Initializes the core by setting up all registers and memory.
@@ -13,8 +16,8 @@ void Core::initialize()
 {
     srand(static_cast<unsigned int>(time(nullptr)));
 
-    delay_timer = 0;
-    sound_timer = 0;
+    delay_timer.setValue(0);
+    sound_timer.setValue(0);
 
     draw_display = false;
 
@@ -44,7 +47,7 @@ void Core::initialize()
  * Loads the specified program into memory.
  * @param program_name - the name of the program that will be loaded into memory.
  */
-void Core::loadProgram(std::string program_name)
+void Core::loadProgram(const std::string& program_name)
 {
     FILE * program = std::fopen(program_name.c_str(), "rb");
     if (!program)
@@ -72,6 +75,8 @@ void Core::loadProgram(std::string program_name)
  */
 void Core::emulateCycle()
 {
+    //std::printf("Instruction: %X\n", ram[PC] << 8 | ram[PC+1]);
+
     in_reg_x = ram[PC] & static_cast<unsigned char>(0x0F);
     in_reg_y = ram[PC + 1] >> 4;
     in_constant_n = ram[PC + 1] & static_cast<unsigned char>(0x0F);
@@ -92,8 +97,8 @@ void Core::emulateCycle()
                 case 0x0EE: // Return from subroutine
                     SP -= 2;
                     {
-                        short offset = STACK_ADDRESS + SP;
-                        PC = ram[offset] << 8 | ram[offset + 1];
+                        short address = STACK_ADDRESS + SP;
+                        PC = ram[address] << 8 | ram[address + 1];
                     }
                     break;
                 default:
@@ -105,9 +110,9 @@ void Core::emulateCycle()
             break;
         case 0x2: // Call subroutine at NNN
             {
-                short offset = STACK_ADDRESS + SP;
-                ram[offset] = static_cast<unsigned char>(PC >> 8);
-                ram[offset + 1] = static_cast<unsigned char>(PC & 0x00FF);
+                short address = STACK_ADDRESS + SP;
+                ram[address] = static_cast<unsigned char>(PC >> 8);
+                ram[address + 1] = static_cast<unsigned char>(PC & 0x00FF);
             }
             SP += 2;
         case 0x1: // Jump to address NNN
@@ -243,7 +248,7 @@ void Core::emulateCycle()
             switch (ram[PC+1])
             {
                 case 0x07: // Set Vx to the value of the delay timer
-                    V[in_reg_x] = delay_timer;
+                    V[in_reg_x] = delay_timer.getValue();
                     break;
                 case 0x0A: // Halt program execution until a key is pressed, and store the key in Vx
                     {
@@ -256,10 +261,10 @@ void Core::emulateCycle()
                     }
                     break;
                 case 0x15: // Set delay timer to Vx
-                    delay_timer = V[in_reg_x];
+                    delay_timer.setValue(V[in_reg_x]);
                     break;
                 case 0x18: // Set sound timer to Vx
-                    sound_timer = V[in_reg_x];
+                    sound_timer.setValue(V[in_reg_x]);
                     break;
                 case 0x1E: // Add Vx to I (set carry flag VF to 1 on carry, 0 otherwise)
                     I += V[in_reg_x];
