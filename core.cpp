@@ -27,12 +27,12 @@ void Core::initialize()
         ram[i] = 0;
         display[i] = 0;
     }
-    for (short i = 16; i < HEIGHT * WIDTH; ++i)
+    for (short i = 16; i < RESOLUTION; ++i)
     {
         display[i] = 0;
         ram[i] = 0;
     }
-    for (short i = HEIGHT * WIDTH; i < 4096; ++i)
+    for (short i = RESOLUTION; i < 4096; ++i)
     {
         ram[i] = 0;
     }
@@ -83,7 +83,7 @@ void Core::emulateCycle()
             switch (in_address)
             {
                 case 0x0E0: // Clear display
-                    for (short i = 0; i < WIDTH * HEIGHT; ++i)
+                    for (short i = 0; i < RESOLUTION; ++i)
                     {
                         display[i] = 0;
                     }
@@ -209,13 +209,13 @@ void Core::emulateCycle()
             {
                 unsigned char pixel_row;
                 short pixel_index;
-                bool pixel_data;
+                unsigned char pixel_data;
                 for (unsigned char row = 0; row < in_constant_n; ++row)
                 {
                     pixel_row = ram[I+row];
                     for (unsigned char col = 0; col < 8; ++col)
                     {
-                        pixel_data = static_cast<unsigned char>(pixel_row >> (7 - col) & 1);
+                        pixel_data = static_cast<unsigned char>((pixel_row >> (7 - col) & 1) ? -1 : 0);
                         pixel_index = V[in_reg_x] + col + (V[in_reg_y] + row) * WIDTH;
                         display[pixel_index] ^= pixel_data;
                         V[0xF] = static_cast<unsigned char>(pixel_data & display[pixel_index] ? 0 : 1); // Set collision flag VF to 1 if a pixel is unset, 0 otherwise

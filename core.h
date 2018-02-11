@@ -9,11 +9,13 @@
  */
 class Core
 {
+public:
+    static constexpr char WIDTH = 64;
+    static constexpr char HEIGHT = 32;
+    static constexpr short RESOLUTION = WIDTH * HEIGHT;
+private:
     static constexpr unsigned short PROGRAM_ADDRESS = 0x200;
     static constexpr unsigned short STACK_ADDRESS = 0xEA0;
-
-    static constexpr unsigned char WIDTH = 64;
-    static constexpr unsigned char HEIGHT = 32;
 
     /**
      * Memory layout:
@@ -40,7 +42,7 @@ class Core
      * Display:
      * - Resolution = 64 x 32
      */
-    unsigned char display[WIDTH * HEIGHT];
+    unsigned char display[RESOLUTION];
 
     /**
      * Timers:
