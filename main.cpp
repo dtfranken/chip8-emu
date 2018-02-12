@@ -1,4 +1,5 @@
 #include <iostream>
+#include <chrono>
 #include "core.h"
 #include "include/SDL2/SDL.h"
 
@@ -37,44 +38,61 @@ int main(int argc, char *argv[])
 
     Core core{keyboard, delay_timer, sound_timer};
 
-    // Initialize registers
+    // Initialize core, memory, timers and input
     core.initialize();
     core.loadProgram("../programs/octo.ch8");
 
     bool quit = false;
     SDL_Event e{};
 
+    double preferred_cycle_duration = 1.0D / 500.0D;
+    std::chrono::steady_clock::time_point end_prev_cycle{};
+    std::chrono::duration<double> time_since_last_cycle{};
+
+    double tick_duration = 1.0D / 60.0D;
+    std::chrono::steady_clock::time_point prev_tick{};
+    std::chrono::duration<double> time_since_last_tick{};
+
     // Emulation loop
     while (!quit)
     {
-        core.emulateCycle();
-
-        // Update screen if necessary
-        if (core.draw_display)
+        time_since_last_cycle = std::chrono::steady_clock::now() - end_prev_cycle;
+        if (time_since_last_cycle.count() >= preferred_cycle_duration)
         {
-            /*for (auto i = 0; i < Core::RESOLUTION; ++i)
-            {
-                std::cout << (core.getPixels()[i] ? "\uff04"  : "\uff0e");
-                if ((i + 1) % 64 == 0)
-                    std::cout << "\n";
+            core.emulateCycle();
+
+            // Update screen if necessary
+            if (core.draw_display) {
+                /*for (auto i = 0; i < Core::RESOLUTION; ++i)
+                {
+                    std::cout << (core.getPixels()[i] ? "\uff04"  : "\uff0e");
+                    if ((i + 1) % 64 == 0)
+                        std::cout << "\n";
+                }
+                std::cout << "\n" << std::endl;*/
+
+                // Update screen
+                SDL_UpdateTexture(screen, nullptr, core.getPixels(), Core::WIDTH * sizeof(char));
+                // TODO: Optimize drawing by only redrawing modified sections
+                SDL_RenderClear(renderer);
+                SDL_RenderCopy(renderer, screen, nullptr, nullptr);
+                SDL_RenderPresent(renderer);
+
+                core.draw_display = false;
+                end_prev_cycle = std::chrono::steady_clock::now();
             }
-            std::cout << "\n" << std::endl;*/
-
-            // Update screen
-            SDL_UpdateTexture(screen, nullptr, core.getPixels(), Core::WIDTH * sizeof(char));
-            // TODO: Optimize drawing by only redrawing modified sections
-            SDL_RenderClear(renderer);
-            SDL_RenderCopy(renderer, screen, nullptr, nullptr);
-            SDL_RenderPresent(renderer);
-
-            core.draw_display = false;
         }
 
         // Update timers
-        delay_timer.decrement();
-        sound_timer.decrement();
+        time_since_last_tick = std::chrono::steady_clock::now() - prev_tick;
+        if (time_since_last_tick.count() >= tick_duration)
+        {
+            delay_timer.decrement();
+            sound_timer.decrement();
+            prev_tick = std::chrono::steady_clock::now();
+        }
 
-        if (!sound_timer.getValue())
+        if (sound_timer.getValue())
         {
             // TODO: beep();
         }
@@ -141,12 +159,8 @@ int main(int argc, char *argv[])
                 default:
                     break;
             }
-            // Update keys
             keyboard.setKey(key, e.key.state);
         }
-
-        // TODO: Time using system clock
-        SDL_Delay(1);
     }
 
     // Clean up
