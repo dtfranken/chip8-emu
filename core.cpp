@@ -132,8 +132,9 @@ void Core::emulateCycle()
             PC += (V[in_reg_x] != ram[PC+1]) ? 4 : 2;
             break;
         case 0x5:
-            if (in_constant_n) // Invalid opcode
+            if (in_constant_n)
             {
+                printf("Invalid opcode: 0x%X\n", ram[PC] << 8 | ram[PC+1]);
                 PC += 2;
             }
             else // Skip the next instruction if Vx == Vy
@@ -198,7 +199,9 @@ void Core::emulateCycle()
                         V[in_reg_x] = V[in_reg_y] <<= 1;
                         V[0xF] = msb;
                     }
+                    break;
                 default:
+                    printf("Invalid opcode: 0x%X\n", ram[PC] << 8 | ram[PC+1]);
                     break;
             }
             PC += 2;
@@ -229,15 +232,14 @@ void Core::emulateCycle()
                     for (unsigned char col = 0; col < 8; ++col)
                     {
                         pixel_data = static_cast<unsigned char>((pixel_row >> (7 - col) & 1) ? -1 : 0);
-                        pixel_index = V[in_reg_x] + col + (V[in_reg_y] + row) * WIDTH;
+                        pixel_index = (V[in_reg_x] + col + (V[in_reg_y] + row) * WIDTH) % RESOLUTION;
                         display[pixel_index] ^= pixel_data;
                         if (!V[0xF])
                         {
-                            V[0xF] |= static_cast<unsigned char>(pixel_data & ~display[pixel_index] ? 1 : 0); // Set collision flag VF to 1 if a pixel is unset
+                            V[0xF] = static_cast<unsigned char>(pixel_data & ~display[pixel_index] ? 1 : 0); // Set collision flag VF to 1 if a pixel is unset
                         }
                     }
                 }
-                //std::cout << "Collision Flag VF = " << (V[0xF] ? '1' : '0') << std::endl;
             }
             draw_display = true;
             PC += 2;
@@ -311,7 +313,9 @@ void Core::emulateCycle()
                         V[reg] = ram[I];
                         ++I;
                     }
-                default: // Invalid opcode
+                    break;
+                default:
+                    printf("Invalid opcode: 0x%X\n", ram[PC] << 8 | ram[PC+1]);
                     break;
             }
         default:

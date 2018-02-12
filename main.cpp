@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
 
     // Initialize registers
     core.initialize();
-    core.loadProgram("../programs/Space Invaders.ch8");
+    core.loadProgram("../programs/octo.ch8");
 
     bool quit = false;
     SDL_Event e{};
@@ -146,7 +146,7 @@ int main(int argc, char *argv[])
         }
 
         // TODO: Time using system clock
-        SDL_Delay(10);
+        SDL_Delay(1);
     }
 
     // Clean up
